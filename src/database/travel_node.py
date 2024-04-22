@@ -72,6 +72,7 @@ class TravelNode:
         Returns:
             str: String representation of the TravelNode instance.
         """
-        # return f"{self.name} ({self.arrival_time} - {self.departure_time})"
-        return f"{self.node_id}"
+        # return f"({self.arrival_time} - {self.departure_time})"
+        return f"{self.name} ({self.arrival_time} - {self.departure_time})"
+        # return f"{self.node_id}"
 

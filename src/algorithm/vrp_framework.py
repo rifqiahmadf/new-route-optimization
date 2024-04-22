@@ -1,10 +1,5 @@
-import random
-import math
 import copy
-import time
-import json
 import datetime
-import numpy as np
 import sys
 import os
 
@@ -134,8 +129,8 @@ class VRPFramework:
         self.degree_rating = degree_rating
 
         # Extract ratings and costs from the tour nodes to calculate min/max values for scaling
-        tour_ratings = [node.rating for node in self.tour]
-        tour_costs = [node.cost for node in self.tour]
+        tour_ratings = [tour_node.rating for tour_node in self.tour]
+        tour_costs = [tour_node.cost for tour_node in self.tour]
 
         # Calculate the minimum and maximum values for ratings and costs
         self.minimum_rating = min(tour_ratings)
@@ -246,11 +241,11 @@ class VRPFramework:
 
         # Aggregating indices, ratings, and costs across all days
         index_list = sum([i["index"] for i in solutions], [])
-        rating_list = sum([i["rating"] for i in solutions], [])
-        cost_list = sum([i["cost"] for i in solutions], [])
+        rating_list = sum([i["ratings"] for i in solutions], [])
+        cost_list = sum([i["costs"] for i in solutions], [])
 
         # Aggregate durations for each day
-        duration_list = [i["duration"] for i in solutions]
+        duration_list = [i["times"] for i in solutions]
 
         # Calculate average rating and then normalize and weight it
         average_rating = sum(rating_list) / len(rating_list)
@@ -309,6 +304,7 @@ class VRPFramework:
                 )
             ) * self.degree_penalty_point_of_interest
 
+            # TODO FIX DESCRIPTION: early routes
             # Calculate time penalties for exceeding the maximum travel time
             penalty_per_day = [
                 max(
@@ -329,6 +325,7 @@ class VRPFramework:
                 )
             ) * self.degree_penalty_time
 
+            print(total_time_penalty, score_penalty_time, self.maximum_penalty_time)
         # Calculate the overall MAUT score as a weighted sum of all component scores
         numerator = (
             score_rating
@@ -349,6 +346,7 @@ class VRPFramework:
         maut_score = numerator / denominator
         return maut_score
 
+    # TODO BACA
     def maut_between_two_nodes(self, current_node, next_node):
         """
         Calculates the Multi-Attribute Utility Theory (MAUT) score between two nodes considering ratings, costs, and time.
