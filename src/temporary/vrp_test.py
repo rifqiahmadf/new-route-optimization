@@ -9,6 +9,8 @@ sys.path.append(parent_dir)
 from database.database_connection import DatabaseConnection
 from database import sql_connection
 from algorithm.ga_vrp import GAVRP
+from algorithm.sa_vrp import SAVRP
+from algorithm.gasa_vrp import GASAVRP
 
 
 def generate_data(n=30, random_state=None):
@@ -52,8 +54,37 @@ def generate_data(n=30, random_state=None):
 random_state = 100
 hotel, tour, time_matrix = generate_data(random_state=random_state)
 
-gavrp = GAVRP()
-gavrp.set_model(
+# gavrp = GAVRP()
+# gavrp.set_model(
+#     tour=tour,
+#     hotel=hotel,
+#     time_matrix=time_matrix,
+#     travel_days=3,
+#     degree_cost=1,
+#     degree_duration=1,
+#     degree_rating=1,
+# )
+# x, y = gavrp.construct_solution()
+# print(x, y)
+# x = gavrp.test()
+# print(x)
+# print(gavrp.tour)
+
+# savrp = SAVRP()
+# savrp.set_model(
+#     tour=tour,
+#     hotel=hotel,
+#     time_matrix=time_matrix,
+#     travel_days=3,
+#     degree_cost=1,
+#     degree_duration=1,
+#     degree_rating=1,
+# )
+# x, y = savrp.construct_solution()
+# print(x, y)
+
+gasavrp = SAVRP()
+gasavrp.set_model(
     tour=tour,
     hotel=hotel,
     time_matrix=time_matrix,
@@ -62,7 +93,5 @@ gavrp.set_model(
     degree_duration=1,
     degree_rating=1,
 )
-x = gavrp.construct_solution()
-# x = gavrp.test()
-# print(x)
-# print(gavrp.tour)
+x, y = gasavrp.construct_solution()
+print(x, y)

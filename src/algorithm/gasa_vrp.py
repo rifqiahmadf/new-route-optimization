@@ -11,7 +11,7 @@ sys.path.append(parent_dir)
 from algorithm.vrp_framework import VRPFramework
 
 
-class GAVRP(VRPFramework):
+class GASAVRP(VRPFramework):
     def __init__(
         self,
         population_size=50,
@@ -19,6 +19,9 @@ class GAVRP(VRPFramework):
         mutation_rate=0.2,
         max_iter=300,
         max_idem=15,
+        temperature=15000,
+        cooling_rate=0.99,
+        stopping_temperature=0.0002,
         random_state=None,
     ):
         super().__init__()
@@ -29,6 +32,10 @@ class GAVRP(VRPFramework):
         self.mutation_rate = mutation_rate
         self.max_iter = max_iter
         self.max_idem = max_idem
+
+        self.temperature = temperature
+        self.cooling_rate = cooling_rate
+        self.stopping_temperature = stopping_temperature
 
         random.seed(random_state)
 
@@ -134,20 +141,63 @@ class GAVRP(VRPFramework):
         )
         return population
 
-    def construct_solution(self):
+    def swap_operation(self, individual):
         """
-        Construct a solution for the Genetic Algorithm in Vehicle Routing Problem.
+        Perform a swap operation on the individual.
 
-        This method initializes a population of random solutions and iteratively
-        applies crossover and mutation operators to create new offsprings. It then
-        evaluates the fitness of the combined population and selects the best
-        individuals for the next generation. The process repeats for a maximum number
-        of iterations or until an idempotent state is reached where no further
-        improvements are observed.
+        Args:
+            individual (list): List representing the individual.
 
         Returns:
-            tuple: A dictionary representing the best solution found and its fitness.
+            list: Mutated individual after performing the swap operation.
         """
+        swapped_individual = individual[:]
+        pos1, pos2 = random.sample(range(len(swapped_individual)), 2)
+        swapped_individual[pos1], swapped_individual[pos2] = (
+            swapped_individual[pos2],
+            swapped_individual[pos1],
+        )
+        return swapped_individual
+
+    def construct_solution(self):
+        """
+        Construct a solution using Simulated Annealing.
+
+        Returns:
+            tuple: A tuple containing the solution dictionary and its fitness value.
+        """
+        solution = random.sample(self.tour, len(self.tour))
+        solution_dict = self.convert_solution_list_to_dict(
+            self.split_itinerary(solution)
+        )
+        fitness = self.calculate_maut(solution_dict)
+
+        while self.temperature >= self.stopping_temperature:
+            # Generate a new solution
+            new_solution = self.swap_operation(solution)
+            new_fitness = self.calculate_maut(
+                self.convert_solution_list_to_dict(self.split_itinerary(new_solution))
+            )
+
+            if new_fitness > fitness:
+                solution = new_solution
+                fitness = new_fitness
+            else:
+                # Calculate acceptance probability
+                probability = np.exp(-(fitness - new_fitness) / self.temperature)
+                if random.uniform(0, 1) < probability:
+                    solution = new_solution
+                    fitness = new_fitness
+
+            self.temperature *= self.cooling_rate
+
+        solution_dict = self.convert_solution_list_to_dict(
+            self.split_itinerary(solution)
+        )
+        fitness = self.calculate_maut(solution_dict)
+        return solution_dict, fitness
+
+    def construct_solution(self):
         solution_dict = {}
         best_fitness = 0
         idem_counter = 0
@@ -191,9 +241,7 @@ class GAVRP(VRPFramework):
             use_tournament_selection = False
 
             if use_tournament_selection:
-                population = self.tournament_selection(
-                    all_individuals, fitness_values
-                )
+                population = self.tournament_selection(all_individuals, fitness_values)
             else:
                 population = self.roulette_wheel_selection(
                     all_individuals=all_individuals,
@@ -224,19 +272,32 @@ class GAVRP(VRPFramework):
                 if idem_counter > self.max_idem:
                     break
 
-        return solution_dict, best_fitness
-
-    def test(self):
-
-        population = [random.sample(self.tour, len(self.tour)) for _ in range(100)]
-        start_time = time.time()  # Record start time
-        fitness_values = [
-            self.calculate_maut(
-                self.convert_solution_list_to_dict(self.split_itinerary(individual))
+            solution_dict = self.convert_solution_list_to_dict(
+                self.split_itinerary(best_solution)
             )
-            for individual in population
-        ]
-        self.roulette_wheel_selection(population, fitness_values)
-        end_time = time.time()  # Record end time
-        execution_time = end_time - start_time  # Calculate execution time
-        print(execution_time)
+            fitness = self.calculate_maut(solution_dict)
+
+        while self.temperature >= self.stopping_temperature:
+            # Generate a new solution
+            new_solution = self.swap_operation(solution)
+            new_fitness = self.calculate_maut(
+                self.convert_solution_list_to_dict(self.split_itinerary(new_solution))
+            )
+
+            if new_fitness > fitness:
+                solution = new_solution
+                fitness = new_fitness
+            else:
+                # Calculate acceptance probability
+                probability = np.exp(-(fitness - new_fitness) / self.temperature)
+                if random.uniform(0, 1) < probability:
+                    solution = new_solution
+                    fitness = new_fitness
+
+            self.temperature *= self.cooling_rate
+
+        solution_dict = self.convert_solution_list_to_dict(
+            self.split_itinerary(solution)
+        )
+        fitness = self.calculate_maut(solution_dict)
+        return solution_dict, fitness
