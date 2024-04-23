@@ -1,6 +1,7 @@
 import sys
 import os
 import random
+import time
 
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
@@ -125,6 +126,7 @@ class GAVRP(VRPFramework):
         return selected_individuals
 
     def construct_solution(self):
+        start_time = time.time()
         """
         Construct a solution for the Genetic Algorithm in Vehicle Routing Problem.
 
@@ -147,9 +149,6 @@ class GAVRP(VRPFramework):
             random.sample(self.tour, len(self.tour))
             for _ in range(self.population_size)
         ]
-
-        print(population)
-        return
 
         for _ in range(self.max_iter):
             offspring = []
@@ -175,7 +174,9 @@ class GAVRP(VRPFramework):
             # Selection process
             all_individuals = population + offspring
             fitness_values = [
-                self.calculate_maut(self.split_itinerary(individual))
+                self.calculate_maut(
+                    self.convert_solution_list_to_dict(self.split_itinerary(individual))
+                )
                 for individual in all_individuals
             ]
 
@@ -210,19 +211,22 @@ class GAVRP(VRPFramework):
                 idem_counter += 1
                 if idem_counter > self.max_idem:
                     break
-
+        end_time = time.time()  # Record end time
+        execution_time = end_time - start_time  # Calculate execution time
+        print(execution_time)
         return solution_dict, best_fitness
 
     def test(self):
-        solution_dict = {}
-        best_fitness = 0
-        idem_counter = 0
 
-        population = [random.sample(self.tour, len(self.tour)) for _ in range(2)]
-        itinerary = VRPFramework.split_itinerary(
-            self=self, initial_itinerary=population[0]
-        )
-        solution_dict = self.convert_solution_list_to_dict(itinerary)
-        print(itinerary)
-        # print(solution_dict)
-        # self.calculate_maut(solution_dict)
+        population = [random.sample(self.tour, len(self.tour)) for _ in range(100)]
+        start_time = time.time()  # Record start time
+        fitness_values = [
+            self.calculate_maut(
+                self.convert_solution_list_to_dict(self.split_itinerary(individual))
+            )
+            for individual in population
+        ]
+        self.roulette_wheel_selection(population, fitness_values)
+        end_time = time.time()  # Record end time
+        execution_time = end_time - start_time  # Calculate execution time
+        print(execution_time)

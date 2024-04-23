@@ -49,7 +49,7 @@ def generate_data(n=30, random_state=None):
     return hotel, tur, timematrix
 
 
-random_state = 2024
+random_state = 100
 hotel, tour, time_matrix = generate_data(random_state=random_state)
 
 gavrp = GAVRP()
@@ -62,6 +62,7 @@ gavrp.set_model(
     degree_duration=1,
     degree_rating=1,
 )
-gavrp.construct_solution()
-
+x = gavrp.construct_solution()
+# x = gavrp.test()
+# print(x)
 # print(gavrp.tour)

@@ -325,7 +325,6 @@ class VRPFramework:
                 )
             ) * self.degree_penalty_time
 
-            print(total_time_penalty, score_penalty_time, self.maximum_penalty_time)
         # Calculate the overall MAUT score as a weighted sum of all component scores
         numerator = (
             score_rating
